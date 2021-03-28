@@ -13,13 +13,20 @@ Packages
 ```{r}
 library(ggplot2)
 library(dplyr)
+library(RCurl)
+library(readr)
 ```
 
 Upload data
 ```{r}
-study1new <- read.csv("/Users/amandamoeller/Desktop/SIOP21/2021_latestdata.csv")
-study1 <- study1new
-names(study1)
+
+urldata="https://raw.githubusercontent.com/anm332/SIOP-2021/main/2021_latestdata.csv"
+
+y <- read_csv(url(urldata))
+
+study1 <- y
+
+
 ```
 
 ```{r}
@@ -30,6 +37,22 @@ study1$relig <- study1$Group.religiousness..Non.religious.0..religious.1.
         # (Non-religious=0, religious=1)
 study1$viol <- study1$Group.violence..0.nonviolent..1.violent.
         # (0=nonviolent, 1=violent)
+
+
+
+#############
+# IF YOU GET ERRORS RUNNING THE NEXT FEW LINES,
+# COPY AND PASTE THE FOLLOWING COMMANDS INTO THE TERMINAL:
+#############
+
+# study1$relig_viol <- study1$`Religious/Violence (1 = Religious & Violent, 2 = Non Religious & Violent, 3 = Religious & Non Violent, 4 = Non Religious & Non-Violent)`
+
+# study1$relig <- study1$`Group religiousness (Non-religious=0, religious=1)`
+
+# study1$viol <- study1$`Group violence (0=nonviolent, 1=violent)`
+#############
+
+
 
 # relevant vars = "Type", "relig_viol", "viol", "WC", "affiliation", "achieve", "power"
 study1$Type <- as.factor(study1$Type)
@@ -78,7 +101,19 @@ ggplot(study1, aes(viol, power))+
   geom_boxplot()
 ```
 
-ANOVA (do four profiles of group different?)
+Need to see if the data passes homoscedasticity test
+Are the variances homogenous?
+Fisher's F-Test:
+```{r}
+# MAIN F-TEST: TYPE AND WC
+var.test(WC ~ Type, data=study1)
+        # F = 0.80406, num df = 59, denom df = 90, p-value = 0.3717
+        # Therefore there is no significant dif between the variances in WC for terrorist/non-terrorist texts
+
+```
+
+ANOVA (do four profiles of group differ?)
+(four profiles based on viol/non-viol, relig/non-relig)
 ```{r}
 oneway.test(affiliation~relig_viol, data=study1, var.equal=TRUE)
         # F = 1.9891, num df = 3, denom df = 147, p-value = 0.1181
@@ -164,6 +199,30 @@ ggboxplot(study1, x = "relig", y = "achieve",
 ggboxplot(study1, x = "relig", y = "power",
           color = "relig", add = "jitter") +
   stat_compare_means(method="t.test") 
+```
+
+Word count viz
+```{r}
+# Ter vs non-ter
+ggplot(study1, aes(Type, WC))+
+  geom_bar(stat="identity")
+
+# 4 profiles 
+ggplot(study1, aes(relig_viol, WC))+
+  geom_bar(stat="identity")
+
+# relig vs non-relig orgs
+ggplot(study1, aes(relig, WC))+
+  geom_bar(stat="identity")
+
+# viol vs non-viol orgs
+ggplot(study1, aes(viol, WC))+
+  geom_bar(stat="identity")
+
+
+
+
+
 ```
 
 
